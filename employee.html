@@ -1,0 +1,977 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Task Manager – Employee</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet"/>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#F1F3F6;
+  --surface:#FFFFFF;
+  --surface2:#F6F7F9;
+  --border:#E2E6EC;
+  --border2:#C9CDD6;
+  --text:#1A1D23;
+  --text2:#5C6370;
+  --text3:#9BA3AF;
+  --accent:#1D3F6E;
+  --accent-lt:#E8EEF7;
+  --accent-tx:#122848;
+  --green:#1B4B35;
+  --green-lt:#E4EFEA;
+  --green-tx:#0E3221;
+  --warn-bg:#FFF8EC;
+  --warn:#7A4800;
+  --danger:#8A1A1A;
+  --danger-bg:#FDEAEA;
+  --r:12px;
+  --rs:8px;
+}
+html,body{height:100%;overflow-x:hidden;background:var(--bg)}
+body{font-family:'Inter',sans-serif;color:var(--text);font-size:15px;line-height:1.5}
+
+/* ══ LOGIN ════════════════════════════════════════════════════ */
+.login-wrap{
+  position:fixed;inset:0;z-index:9999;
+  background:var(--bg);
+  display:flex;align-items:center;justify-content:center;
+  padding:24px;
+}
+.login-card{
+  width:100%;max-width:420px;
+  background:var(--surface);
+  border-radius:16px;
+  overflow:hidden;
+  box-shadow:0 4px 24px rgba(0,0,0,.10);
+}
+.login-top{
+  background:var(--accent);
+  padding:32px 28px 24px;
+  text-align:center;
+}
+.login-top h1{color:#fff;font-size:22px;font-weight:700;margin:0 0 4px}
+.login-top p{color:rgba(255,255,255,.75);font-size:14px;margin:0}
+.login-form{padding:28px 28px 32px;display:flex;flex-direction:column;gap:16px}
+.login-err{
+  background:var(--danger-bg);color:var(--danger);
+  border:1px solid var(--danger);border-radius:var(--rs);
+  padding:10px 14px;font-size:13px;display:none;font-weight:500;
+}
+.lf-group{display:flex;flex-direction:column;gap:7px}
+.lf-label{font-size:11px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:.07em}
+.lf-input{
+  width:100%;padding:13px 16px;
+  border:2px solid var(--border2);border-radius:var(--rs);
+  font-family:'Inter',sans-serif;font-size:16px;
+  color:var(--text);background:var(--surface2);
+  outline:none;transition:border-color .15s,background .15s;
+  -webkit-appearance:none;min-height:52px;
+}
+.lf-input:focus{border-color:var(--accent);background:#fff;box-shadow:0 0 0 3px rgba(29,63,110,.08)}
+.login-btn{
+  width:100%;padding:14px;min-height:52px;
+  background:var(--accent);color:#fff;
+  border:none;border-radius:var(--rs);
+  font-family:'Inter',sans-serif;font-size:16px;font-weight:700;
+  cursor:pointer;transition:background .15s;
+}
+.login-btn:active{background:var(--accent-tx)}
+.login-btn:disabled{opacity:.5;cursor:not-allowed}
+
+/* ══ HEADER ═══════════════════════════════════════════════════ */
+.hdr{
+  background:var(--surface);
+  border-bottom:1px solid var(--border);
+  height:56px;
+  display:flex;align-items:center;justify-content:space-between;
+  padding:0 18px;
+  position:sticky;top:0;z-index:200;
+  width:100%;
+}
+.hdr-brand{
+  display:flex;align-items:center;gap:9px;
+  font-size:17px;font-weight:700;color:var(--text);
+}
+.brand-dot{width:9px;height:9px;border-radius:50%;background:var(--accent);flex-shrink:0}
+.brand-sub{color:var(--text3);font-weight:400;font-size:14px}
+.user-chip{
+  display:flex;align-items:center;gap:8px;
+  background:var(--surface2);border:1px solid var(--border);
+  border-radius:24px;padding:4px 12px 4px 4px;
+  max-width:200px;overflow:hidden;
+}
+.avatar{
+  width:30px;height:30px;border-radius:50%;
+  background:var(--accent);color:#fff;
+  display:flex;align-items:center;justify-content:center;
+  font-size:12px;font-weight:700;flex-shrink:0;
+}
+.u-name{font-size:13px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.u-role{
+  font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;
+  padding:2px 8px;border-radius:10px;
+  background:var(--accent-lt);color:var(--accent-tx);flex-shrink:0;
+}
+
+
+/* ══ USER MENU DROPDOWN ════════════════════════════════════════ */
+.user-chip{position:relative;cursor:pointer;user-select:none}
+.user-chip:hover{background:var(--border);border-color:var(--border2)}
+.user-menu{
+  position:absolute;top:calc(100% + 8px);right:0;
+  background:var(--surface);
+  border:1px solid var(--border);
+  border-radius:var(--r);
+  box-shadow:0 8px 24px rgba(0,0,0,.12);
+  min-width:180px;
+  overflow:hidden;
+  display:none;
+  z-index:500;
+}
+.user-menu.open{display:block}
+.user-menu-info{
+  padding:12px 16px 10px;
+  border-bottom:1px solid var(--border);
+}
+.user-menu-name{font-size:14px;font-weight:700;color:var(--text)}
+.user-menu-role{font-size:11px;color:var(--text3);margin-top:2px;text-transform:uppercase;letter-spacing:.05em}
+.user-menu-btn{
+  display:flex;align-items:center;gap:10px;
+  width:100%;padding:11px 16px;
+  background:transparent;border:none;
+  font-family:'Inter',sans-serif;font-size:14px;font-weight:600;
+  color:var(--danger);cursor:pointer;text-align:left;
+  transition:background .12s;
+}
+.user-menu-btn:hover{background:var(--danger-bg)}
+.user-menu-btn svg{flex-shrink:0}
+/* ══ TABS ══════════════════════════════════════════════════════ */
+.tab-bar{
+  background:var(--surface);
+  border-bottom:1px solid var(--border);
+  display:flex;width:100%;
+  overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none;
+  position:sticky;top:56px;z-index:190;
+}
+.tab-bar::-webkit-scrollbar{display:none}
+.tab{
+  flex:1 1 0;min-width:80px;
+  padding:0 12px;height:48px;
+  display:flex;align-items:center;justify-content:center;gap:5px;
+  font-size:14px;font-weight:500;color:var(--text2);
+  border:none;background:transparent;cursor:pointer;
+  border-bottom:2px solid transparent;white-space:nowrap;
+  transition:color .15s,border-color .15s;
+}
+.tab.active{color:var(--accent);border-bottom-color:var(--accent);font-weight:700}
+.tab-badge{
+  display:inline-flex;align-items:center;justify-content:center;
+  background:var(--danger);color:#fff;border-radius:10px;
+  font-size:10px;font-weight:700;min-width:18px;height:18px;padding:0 5px;
+}
+
+/* ══ PAGE ══════════════════════════════════════════════════════ */
+.page{padding:16px;width:100%}
+
+/* ══ FORM CARD ═════════════════════════════════════════════════ */
+.form-card{
+  background:var(--surface);
+  border-radius:var(--r);
+  border:1px solid var(--border);
+  padding:20px 18px;
+  width:100%;
+}
+.field-group{display:flex;flex-direction:column;gap:8px;margin-bottom:18px}
+.field-group:last-of-type{margin-bottom:0}
+.field-label{
+  font-size:11px;font-weight:700;color:var(--text2);
+  text-transform:uppercase;letter-spacing:.07em;
+}
+.field-label .req{color:var(--accent);margin-left:3px}
+input[type=date],input[type=text],select,textarea{
+  width:100%;padding:13px 16px;
+  border:1.5px solid var(--border2);border-radius:var(--rs);
+  font-family:'Inter',sans-serif;font-size:15px;
+  color:var(--text);background:var(--surface2);
+  outline:none;transition:border-color .15s,background .15s;
+  -webkit-appearance:none;appearance:none;min-height:50px;
+}
+input[type=date]:focus,input[type=text]:focus,select:focus,textarea:focus{
+  border-color:var(--accent);background:#fff;
+  box-shadow:0 0 0 3px rgba(29,63,110,.07);
+}
+textarea{resize:vertical;min-height:100px;line-height:1.5}
+select{
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath fill='%236B7280' d='M1 1l5 5 5-5'/%3E%3C/svg%3E");
+  background-repeat:no-repeat;background-position:right 14px center;padding-right:40px;cursor:pointer;
+}
+.btn-row{display:flex;gap:10px;margin-top:20px}
+.btn{
+  padding:13px 20px;min-height:50px;border-radius:var(--rs);
+  font-family:'Inter',sans-serif;font-size:15px;font-weight:700;
+  cursor:pointer;border:none;display:inline-flex;align-items:center;
+  justify-content:center;gap:7px;transition:all .15s;
+  -webkit-tap-highlight-color:transparent;
+}
+.btn-primary{background:var(--accent);color:#fff;flex:1}
+.btn-primary:active{background:var(--accent-tx)}
+.btn-primary:disabled{opacity:.5;cursor:not-allowed}
+.btn-ghost{background:transparent;color:var(--accent);border:1.5px solid var(--accent)}
+.btn-ghost:active{background:var(--accent-lt)}
+.btn-green{background:var(--green);color:#fff}
+.btn-green:active{background:var(--green-tx)}
+.btn-green:disabled{opacity:.5;cursor:not-allowed}
+.btn-sm{padding:9px 16px;font-size:13px;min-height:40px}
+.btn-full{width:100%}
+
+/* ══ FILTER BAR ════════════════════════════════════════════════ */
+.filter-bar{
+  background:var(--surface);border-radius:var(--r);
+  border:1px solid var(--border);
+  padding:12px 14px;margin-bottom:12px;
+  display:flex;flex-wrap:wrap;gap:8px;align-items:center;
+}
+.filter-bar input[type=text]{flex:1;min-width:120px;padding:9px 12px;font-size:14px;min-height:40px}
+.filter-bar select{flex:1;min-width:110px;padding:9px 12px;font-size:14px;min-height:40px}
+
+/* ══ TASK CARDS (mobile list) ══════════════════════════════════ */
+.task-list{display:flex;flex-direction:column;gap:10px}
+.task-card{
+  background:var(--surface);border-radius:var(--r);
+  border:1px solid var(--border);overflow:hidden;
+}
+.tc-top{
+  padding:14px 16px 10px;
+  display:flex;justify-content:space-between;align-items:flex-start;gap:10px;
+}
+.tc-title{font-size:14px;font-weight:700;line-height:1.4;flex:1;color:var(--text)}
+.tc-meta{
+  padding:0 16px 12px;
+  display:grid;grid-template-columns:1fr 1fr;gap:6px 14px;
+}
+.tc-meta-item{font-size:12px;color:var(--text3)}
+.tc-meta-item span{display:block;color:var(--text);font-weight:600;font-size:13px;margin-top:1px}
+.tc-remark{
+  padding:10px 16px;background:var(--surface2);
+  border-top:1px solid var(--border);
+  font-size:13px;color:var(--text2);word-break:break-word;line-height:1.5;
+}
+.tc-remark strong{display:block;font-size:11px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.05em;margin-bottom:3px}
+.tc-action{padding:10px 16px;border-top:1px solid var(--border);background:var(--surface2)}
+
+/* ══ UPDATE PANEL (inside card) ════════════════════════════════ */
+.upd-panel{
+  padding:16px;background:#EEF4FF;
+  border-top:2px solid var(--accent);
+  display:flex;flex-direction:column;gap:12px;
+}
+.upd-panel .field-group{margin-bottom:0}
+.upd-actions{display:flex;gap:8px}
+.upd-actions .btn{flex:1}
+
+/* ══ BADGE ════════════════════════════════════════════════════ */
+.bdg{display:inline-flex;align-items:center;padding:4px 11px;border-radius:20px;font-size:11px;font-weight:700;white-space:nowrap}
+.bdg-pending{background:var(--warn-bg);color:var(--warn)}
+.bdg-completed{background:var(--green-lt);color:var(--green-tx)}
+.bdg-inprogress{background:var(--accent-lt);color:var(--accent-tx)}
+.bdg-other{background:var(--surface2);color:var(--text2);border:1px solid var(--border)}
+
+/* ══ DESKTOP TABLE ═════════════════════════════════════════════ */
+.table-wrap{overflow-x:auto;display:none}
+table{width:100%;border-collapse:collapse;font-size:13px;table-layout:fixed}
+th{
+  text-align:left;padding:9px 13px;font-size:11px;font-weight:700;
+  color:var(--text3);text-transform:uppercase;letter-spacing:.05em;
+  border-bottom:1.5px solid var(--border);background:var(--surface2);white-space:nowrap;
+}
+td{padding:10px 13px;border-bottom:1px solid var(--border);vertical-align:top}
+tr:last-child td{border-bottom:none}
+tr:hover td{background:var(--surface2)}
+.col-date,.col-dl,.col-actual{width:90px}
+.col-task{width:22%}.col-dept,.col-emp,.col-by{width:9%}
+.col-status{width:96px}.col-remarks{width:17%}.col-act{width:80px}
+.rm-cell{cursor:pointer;color:var(--text2)}
+.rm-inner{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;word-break:break-word}
+.rm-cell.expanded .rm-inner{display:block;white-space:pre-wrap}
+.rm-hint{font-size:10px;color:var(--text3);margin-top:3px;user-select:none}
+.rm-cell.expanded .rm-hint{display:none}
+/* Desktop update row */
+.upd-tr td{background:#EEF4FF!important}
+.upd-tr-inner{display:flex;gap:12px;flex-wrap:wrap;align-items:flex-end;padding:6px 0}
+.upd-tr-field{display:flex;flex-direction:column;gap:4px;flex:1;min-width:140px}
+.upd-tr-label{font-size:11px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:.05em}
+.upd-tr-input{
+  padding:8px 11px;border:1.5px solid var(--border2);border-radius:var(--rs);
+  font-family:'Inter',sans-serif;font-size:13px;color:var(--text);
+  background:#fff;outline:none;width:100%;
+}
+.upd-tr-input:focus{border-color:var(--accent)}
+
+/* ══ LOADER / EMPTY ════════════════════════════════════════════ */
+.loader{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:56px 20px;color:var(--text3);gap:12px}
+.loader p{font-size:14px}
+.spin{width:22px;height:22px;border:2px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:spin .8s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.empty{text-align:center;padding:56px 20px;color:var(--text3)}
+.empty-icon{font-size:32px;margin-bottom:10px}
+.empty-ttl{font-size:16px;font-weight:600;color:var(--text2)}
+
+/* ══ DASHBOARD ═════════════════════════════════════════════════ */
+.dash-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px}
+.sc{border-radius:var(--r);padding:16px 14px}
+.sc-n{font-size:32px;font-weight:700;line-height:1}
+.sc-l{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.05em}
+.sc-green{background:#E4EFEA}.sc-green .sc-n,.sc-green .sc-l{color:#0E3221}
+.sc-yellow{background:#FFF7E6}.sc-yellow .sc-n,.sc-yellow .sc-l{color:#7A4800}
+.sc-red{background:#FDEAEA}.sc-red .sc-n,.sc-red .sc-l{color:#8A1A1A}
+.sc-gray{background:#F1EFE8}.sc-gray .sc-n,.sc-gray .sc-l{color:#444441}
+.dash-bars{background:var(--surface);border-radius:var(--r);border:1px solid var(--border);padding:16px}
+.bar-item{margin-bottom:14px}
+.bar-item:last-child{margin-bottom:0}
+.bar-lbl{display:flex;justify-content:space-between;font-size:12px;margin-bottom:5px}
+.bar-track{height:10px;border-radius:5px;overflow:hidden}
+.bar-fill{height:100%;border-radius:5px;transition:width .6s ease}
+
+/* ══ TOAST ═════════════════════════════════════════════════════ */
+.toast{
+  position:fixed;bottom:20px;left:50%;transform:translateX(-50%) translateY(20px);
+  background:var(--text);color:#fff;padding:12px 20px;
+  border-radius:var(--r);font-size:13px;font-weight:600;
+  opacity:0;transition:all .25s;z-index:9998;
+  max-width:calc(100vw - 32px);text-align:center;pointer-events:none;
+}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+.toast.ok{background:var(--green)}
+.toast.err{background:var(--danger)}
+
+/* ══ RESPONSIVE ════════════════════════════════════════════════ */
+@media(min-width:860px){
+  .page{padding:24px 32px}
+  .form-card{padding:28px 32px}
+  .form-two{display:grid;grid-template-columns:1fr 1fr;gap:18px 28px}
+  .form-two .field-group{margin-bottom:0}
+  .task-list{display:none}
+  .table-wrap{display:block}
+  .dash-grid{grid-template-columns:repeat(4,1fr);gap:14px}
+  .hdr{padding:0 32px}
+  .tab{font-size:14px;min-width:110px}
+}
+</style>
+</head>
+<body>
+
+<!-- ══ LOGIN ═══════════════════════════════════════════════════ -->
+<div class="login-wrap" id="loginWrap">
+  <div class="login-card">
+    <div class="login-top">
+      <h1>Task Manager</h1>
+      <p>Employee Portal</p>
+    </div>
+    <div class="login-form">
+      <div class="login-err" id="loginErr"></div>
+      <div class="lf-group">
+        <span class="lf-label">User ID</span>
+        <input class="lf-input" type="text" id="loginId" placeholder="Enter your User ID"
+               autocomplete="username" onkeydown="if(event.key==='Enter')doLogin()"/>
+      </div>
+      <div class="lf-group">
+        <span class="lf-label">Password</span>
+        <input class="lf-input" type="password" id="loginPass" placeholder="Enter your password"
+               autocomplete="current-password" onkeydown="if(event.key==='Enter')doLogin()"/>
+      </div>
+      <button class="login-btn" id="loginBtn" onclick="doLogin()">Sign In</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══ HEADER ══════════════════════════════════════════════════ -->
+<div class="hdr">
+  <div class="hdr-brand">
+    <div class="brand-dot"></div>
+    Task Manager
+    <span class="brand-sub">/ Employee</span>
+  </div>
+  <div class="user-chip" id="userChip" onclick="toggleUserMenu(event)">
+    <div class="avatar" id="uAvatar">?</div>
+    <span class="u-name" id="uName">—</span>
+    <span class="u-role" id="uRole" style="display:none"></span>
+    <!-- Dropdown -->
+    <div class="user-menu" id="userMenu">
+      <div class="user-menu-info">
+        <div class="user-menu-name" id="menuName">—</div>
+        <div class="user-menu-role" id="menuRole">—</div>
+      </div>
+      <button class="user-menu-btn" onclick="doLogout()">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
+          <polyline points="16 17 21 12 16 7"/>
+          <line x1="21" y1="12" x2="9" y2="12"/>
+        </svg>
+        Sign Out
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- ══ TABS ════════════════════════════════════════════════════ -->
+<div class="tab-bar">
+  <button class="tab active" onclick="switchTab('new')">New Task</button>
+  <button class="tab" onclick="switchTab('pending')" id="tabPending">
+    Pending <span class="tab-badge" id="pendBadge" style="display:none">0</span>
+  </button>
+  <button class="tab" onclick="switchTab('all')">All Tasks</button>
+  <button class="tab" onclick="switchTab('dash')">Dashboard</button>
+</div>
+
+<!-- ══ NEW TASK ════════════════════════════════════════════════ -->
+<div class="page" id="pNew">
+  <div class="form-card">
+    <!-- On mobile: single column. On desktop: two columns via .form-two -->
+    <div class="form-two">
+      <div class="field-group">
+        <span class="field-label">Date <span class="req">*</span></span>
+        <input type="date" id="fDate"/>
+      </div>
+      <div class="field-group">
+        <span class="field-label">Deadline <span class="req">*</span></span>
+        <input type="date" id="fPlanned"/>
+      </div>
+    </div>
+    <div class="field-group" style="margin-top:18px">
+      <span class="field-label">Task Description <span class="req">*</span></span>
+      <textarea id="fTask" placeholder="Describe the task clearly…"></textarea>
+    </div>
+    <div class="form-two" style="margin-top:18px">
+      <div class="field-group">
+        <span class="field-label">Department <span class="req">*</span></span>
+        <select id="fDept"><option value="">— Select —</option></select>
+      </div>
+      <div class="field-group">
+        <span class="field-label">Assigned By <span class="req">*</span></span>
+        <select id="fEmp"><option value="">— Select Name —</option></select>
+      </div>
+    </div>
+    <div class="btn-row" style="margin-top:20px">
+      <button class="btn btn-primary" id="btnSend" onclick="doSendTask()"><span>Send Task</span></button>
+      <button class="btn btn-ghost" onclick="clearForm()">Clear</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══ PENDING TASKS ═══════════════════════════════════════════ -->
+<div class="page" id="pPending" style="display:none">
+  <div class="filter-bar">
+    <input type="text" placeholder="Search tasks…" onkeyup="filterCards('pending',this.value)"/>
+    <select onchange="filterCards('pending','',this.value,'dept')" id="fPendDept"><option value="">All Depts</option></select>
+    <select onchange="filterCards('pending','',this.value,'status')" id="fPendStatus"><option value="">All Statuses</option></select>
+    <button class="btn btn-ghost btn-sm" onclick="loadPending()">↻</button>
+  </div>
+  <div class="task-list" id="mPend"></div>
+  <div class="table-wrap" id="dPend"></div>
+</div>
+
+<!-- ══ ALL TASKS ═══════════════════════════════════════════════ -->
+<div class="page" id="pAll" style="display:none">
+  <div class="filter-bar">
+    <input type="text" placeholder="Search tasks…" onkeyup="filterCards('all',this.value)"/>
+    <select onchange="filterCards('all','',this.value,'dept')" id="fAllDept"><option value="">All Depts</option></select>
+    <select onchange="filterCards('all','',this.value,'status')" id="fAllStatus"><option value="">All Statuses</option></select>
+    <button class="btn btn-ghost btn-sm" onclick="loadAll()">↻</button>
+  </div>
+  <div class="task-list" id="mAll"></div>
+  <div class="table-wrap" id="dAll"></div>
+</div>
+
+<!-- ══ DASHBOARD ═══════════════════════════════════════════════ -->
+<div class="page" id="pDash" style="display:none">
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
+    <span style="font-size:16px;font-weight:700">My Performance</span>
+    <button class="btn btn-ghost btn-sm" onclick="loadDash()">↻ Refresh</button>
+  </div>
+  <div id="wDash"><div class="loader"><div class="spin"></div><p>Loading…</p></div></div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+var dd={departments:[],employees:[],statuses:[]};
+var currentUser=null, activeTab='new';
+var allPending=[], allTasks=[];
+
+/* ══ LOGIN ════════════════════════════════════════════════════ */
+function doLogin(){
+  var uid=(document.getElementById('loginId')||{}).value||'';
+  var pass=(document.getElementById('loginPass')||{}).value||'';
+  var btn=document.getElementById('loginBtn');
+  var err=document.getElementById('loginErr');
+  uid=uid.trim(); pass=pass.trim();
+  if(!uid||!pass){showErr('Please enter both User ID and Password.');return;}
+  btn.disabled=true; btn.textContent='Signing in…';
+  err.style.display='none';
+  google.script.run
+    .withSuccessHandler(function(r){
+      btn.disabled=false; btn.textContent='Sign In';
+      if(r.error){showErr(r.error);return;}
+      currentUser=r;
+      document.getElementById('loginWrap').style.display='none';
+      setChip(r);
+      google.script.run.withSuccessHandler(initDD)
+        .withFailureHandler(function(e){toast('Dropdown load failed','err');})
+        .getDropdownData();
+    })
+    .withFailureHandler(function(e){
+      btn.disabled=false; btn.textContent='Sign In';
+      showErr('Connection error. Please try again.');
+    })
+    .loginWithCredentials(uid,pass);
+}
+function showErr(m){var e=document.getElementById('loginErr');e.textContent=m;e.style.display='block';}
+function setChip(u){
+  var ini=(u.name||'?').split(' ').map(function(w){return w[0]||'';}).join('').substring(0,2).toUpperCase();
+  var av=document.getElementById('uAvatar');
+  av.textContent=ini; av.style.background=''; av.style.color='';
+  document.getElementById('uName').textContent=u.name||'—';
+  var rl=document.getElementById('uRole');
+  rl.textContent=(u.role||'employee').toUpperCase(); rl.style.display='';
+  // Also update the dropdown info
+  var mn=document.getElementById('menuName'); if(mn) mn.textContent=u.name||'—';
+  var mr=document.getElementById('menuRole'); if(mr) mr.textContent=(u.role||'employee').toUpperCase();
+}
+
+function toggleUserMenu(e){
+  e.stopPropagation();
+  var menu=document.getElementById('userMenu');
+  menu.classList.toggle('open');
+}
+
+// Close menu when clicking anywhere else
+document.addEventListener('click', function(){
+  var menu=document.getElementById('userMenu');
+  if(menu) menu.classList.remove('open');
+});
+
+function doLogout(){
+  currentUser=null;
+  // Reset header chip
+  var av=document.getElementById('uAvatar');
+  av.textContent='?'; av.style.background=''; av.style.color='';
+  document.getElementById('uName').textContent='—';
+  var rl=document.getElementById('uRole');
+  rl.textContent=''; rl.style.display='none';
+  // Reset dropdowns
+  var dSel=document.getElementById('fDept'), eSel=document.getElementById('fEmp');
+  if(dSel) dSel.innerHTML='<option value="">— Select —</option>';
+  if(eSel) eSel.innerHTML='<option value="">— Select Name —</option>';
+  ['fPendDept','fAllDept','fPendStatus','fAllStatus'].forEach(function(id){
+    var el=document.getElementById(id);
+    if(el) el.innerHTML=el.id.includes('Dept')?'<option value="">All Depts</option>':'<option value="">All Statuses</option>';
+  });
+  // Reset tabs to New Task
+  switchTab('new');
+  allPending=[]; allTasks=[]; dd={departments:[],employees:[],statuses:[]};
+  // Close menu and show login
+  document.getElementById('userMenu').classList.remove('open');
+  // Clear login fields
+  var li=document.getElementById('loginId'); if(li) li.value='';
+  var lp=document.getElementById('loginPass'); if(lp) lp.value='';
+  var le=document.getElementById('loginErr'); if(le) le.style.display='none';
+  // Show login screen
+  document.getElementById('loginWrap').style.display='flex';
+  setTimeout(function(){var li=document.getElementById('loginId');if(li)li.focus();},100);
+}
+
+/* ══ INIT ════════════════════════════════════════════════════ */
+window.addEventListener('load',function(){
+  setToday();
+  document.getElementById('loginId').focus();
+});
+
+function initDD(data){
+  dd=data;
+  var dSel=document.getElementById('fDept'), eSel=document.getElementById('fEmp');
+  (data.departments||[]).forEach(function(d){
+    dSel.innerHTML+='<option value="'+esc(d)+'">'+esc(d)+'</option>';
+    ['fPendDept','fAllDept'].forEach(function(id){
+      var el=document.getElementById(id);
+      if(el) el.innerHTML+='<option value="'+esc(d)+'">'+esc(d)+'</option>';
+    });
+  });
+  (data.employees||[]).forEach(function(e){
+    eSel.innerHTML+='<option value="'+esc(e.name)+'" data-email="'+esc(e.email)+'" data-phone="'+esc(e.phone||'')+'">'+esc(e.name)+'</option>';
+  });
+  (data.statuses||[]).forEach(function(s){
+    ['fPendStatus','fAllStatus'].forEach(function(id){
+      var el=document.getElementById(id);
+      if(el) el.innerHTML+='<option value="'+esc(s)+'">'+esc(s)+'</option>';
+    });
+  });
+}
+
+function setToday(){
+  var d=document.getElementById('fDate');
+  if(d) d.value=new Date().toISOString().split('T')[0];
+}
+
+/* ══ TABS ════════════════════════════════════════════════════ */
+function switchTab(t){
+  activeTab=t;
+  ['new','pending','all','dash'].forEach(function(x,i){
+    document.getElementById('p'+cap(x)).style.display=x===t?'block':'none';
+    document.querySelectorAll('.tab')[i].classList.toggle('active',x===t);
+  });
+  if(t==='pending') loadPending();
+  if(t==='all') loadAll();
+  if(t==='dash') loadDash();
+}
+function cap(s){return s.charAt(0).toUpperCase()+s.slice(1);}
+
+/* ══ NEW TASK ════════════════════════════════════════════════ */
+function doSendTask(){
+  var date=document.getElementById('fDate').value;
+  var task=document.getElementById('fTask').value.trim();
+  var dept=document.getElementById('fDept').value;
+  var emp=document.getElementById('fEmp').value;
+  var plan=document.getElementById('fPlanned').value;
+  if(!date||!task||!dept||!emp||!plan){toast('Please fill in all required fields','err');return;}
+  var opt=document.querySelector('#fEmp option[value="'+emp.replace(/"/g,'\\"')+'"]');
+  var email=opt?opt.dataset.email:'';
+  var phone=opt?opt.dataset.phone:'';
+  var btn=document.getElementById('btnSend');
+  btn.disabled=true; btn.querySelector('span').textContent='Sending…';
+  google.script.run
+    .withSuccessHandler(function(r){
+      btn.disabled=false; btn.querySelector('span').textContent='Send Task';
+      if(r.error){toast('Error: '+r.error,'err');return;}
+      toast('Task sent successfully!','ok');
+      clearForm(); switchTab('pending');
+    })
+    .withFailureHandler(function(e){btn.disabled=false; btn.querySelector('span').textContent='Send Task'; toast('Error: '+e.message,'err');})
+    .sendTask({
+      date:date,task:task,department:dept,assignedTo:emp,
+      email:email,phone:phone,plannedWhen:plan,
+      assignedByName:(currentUser?currentUser.name:''),
+      assignedByEmail:(currentUser?currentUser.email:'')
+    });
+}
+function clearForm(){
+  setToday();
+  ['fTask','fPlanned'].forEach(function(id){document.getElementById(id).value='';});
+  ['fDept','fEmp'].forEach(function(id){document.getElementById(id).selectedIndex=0;});
+}
+
+/* ══ PENDING TASKS ═══════════════════════════════════════════ */
+function loadPending(){
+  setLoad('mPend'); setLoad('dPend');
+  google.script.run
+    .withSuccessHandler(function(r){
+      if(r.error){setErr2('mPend',r.error);setErr2('dPend',r.error);return;}
+      allPending=r.tasks||[];
+      renderPending(allPending);
+      var b=document.getElementById('pendBadge');
+      if(allPending.length>0){b.textContent=allPending.length;b.style.display='inline-flex';}
+      else{b.style.display='none';}
+    })
+    .withFailureHandler(function(e){setErr2('mPend',e.message);setErr2('dPend',e.message);})
+    .getTasks('pending',currentUser);
+}
+
+function renderPending(tasks){
+  var ml=document.getElementById('mPend');
+  if(!tasks||!tasks.length){
+    var empty='<div class="empty"><div class="empty-icon">✓</div><div class="empty-ttl">No pending tasks!</div></div>';
+    ml.innerHTML=empty; document.getElementById('dPend').innerHTML=empty; return;
+  }
+  /* Mobile cards */
+  var mh='';
+  tasks.forEach(function(t){
+    var rid=esc(t.rowId);
+    var statusOpts=(dd.statuses||[]).map(function(s){
+      return '<option value="'+esc(s)+'"'+(s===t.status?' selected':'')+'>'+esc(s)+'</option>';
+    }).join('');
+    mh+='<div class="task-card" data-dept="'+esc(t.department)+'" data-status="'+esc(t.status)+'" data-rowid="'+rid+'">'
+      +'<div class="tc-top">'
+      +'<div class="tc-title">'+esc(t.task)+'</div>'
+      +'<span class="bdg '+bdgCls(t.status)+'">'+esc(t.status||'—')+'</span>'
+      +'</div>'
+      +'<div class="tc-meta">'
+      +'<div class="tc-meta-item">Department<span>'+esc(t.department)+'</span></div>'
+      +'<div class="tc-meta-item">Assigned To<span>'+esc(t.assignedTo)+'</span></div>'
+      +'<div class="tc-meta-item">Date<span>'+esc(t.date)+'</span></div>'
+      +'<div class="tc-meta-item">Deadline<span>'+esc(t.plannedWhen)+'</span></div>'
+      +'<div class="tc-meta-item">Assigned By<span>'+esc(t.assignedBy)+'</span></div>'
+      +'</div>'
+      +'<div class="tc-action">'
+      +'<button class="btn btn-green btn-full btn-sm" onclick="toggleMUpd(this,\''+rid+'\')">Update Task</button>'
+      +'</div>'
+      +'<div class="upd-panel" id="mupd-'+rid+'" style="display:none">'
+      +'<div class="field-group"><span class="field-label">Status <span class="req">*</span></span>'
+      +'<select class="upd-tr-input" id="mus-'+rid+'" onchange="onStatusChange(this,\''+rid+'\',true)">'
+      +'<option value="">— Select Status —</option>'+statusOpts+'</select></div>'
+      +'<div class="field-group"><span class="field-label">How / Attachment</span>'
+      +'<input type="text" class="upd-tr-input" id="mur-'+rid+'" placeholder="Describe how it was done or paste a link…"/></div>'
+      +'<div class="upd-actions">'
+      +'<button class="btn btn-green btn-sm" id="musubmit-'+rid+'" onclick="submitUpd(\''+rid+'\',true)"><span>Update Task</span></button>'
+      +'<button class="btn btn-ghost btn-sm" onclick="closeMUpd(\''+rid+'\')">Cancel</button>'
+      +'</div>'
+      +'</div>'
+      +'</div>';
+  });
+  ml.innerHTML=mh;
+
+  /* Desktop table */
+  var th='<table><colgroup>'
+    +'<col class="col-date"><col class="col-task"><col class="col-dept"><col class="col-emp">'
+    +'<col class="col-dl"><col class="col-status"><col class="col-by"><col class="col-act">'
+    +'</colgroup><thead><tr>'
+    +'<th>Date</th><th>Task</th><th>Dept</th><th>Assigned To</th>'
+    +'<th>Deadline</th><th>Status</th><th>By</th><th>Action</th>'
+    +'</tr></thead><tbody>';
+  tasks.forEach(function(t){
+    th+='<tr data-dept="'+esc(t.department)+'" data-status="'+esc(t.status)+'" id="drow-'+esc(t.rowId)+'">'
+      +'<td style="white-space:nowrap;font-size:12px">'+esc(t.date)+'</td>'
+      +'<td style="font-weight:600">'+esc(t.task)+'</td>'
+      +'<td style="font-size:12px">'+esc(t.department)+'</td>'
+      +'<td style="font-size:12px">'+esc(t.assignedTo)+'</td>'
+      +'<td style="white-space:nowrap;font-size:12px">'+esc(t.plannedWhen)+'</td>'
+      +'<td><span class="bdg '+bdgCls(t.status)+'">'+esc(t.status||'—')+'</span></td>'
+      +'<td style="color:var(--text3);font-size:11px">'+esc(t.assignedBy)+'</td>'
+      +'<td><button class="btn btn-green btn-sm" onclick="toggleDUpd(\''+esc(t.rowId)+'\')">Update</button></td>'
+      +'</tr>';
+  });
+  th+='</tbody></table>';
+  document.getElementById('dPend').innerHTML=th;
+}
+
+/* Mobile update panel */
+function toggleMUpd(btn,rid){
+  var panel=document.getElementById('mupd-'+rid);
+  if(!panel) return;
+  var open=panel.style.display!=='none';
+  panel.style.display=open?'none':'block';
+  btn.textContent=open?'Update Task':'Cancel';
+}
+function closeMUpd(rid){
+  var p=document.getElementById('mupd-'+rid); if(p) p.style.display='none';
+  var b=document.querySelector('[data-rowid="'+rid+'"] .tc-action .btn');
+  if(b) b.textContent='Update Task';
+}
+
+/* Desktop update row */
+function toggleDUpd(rid){
+  var existing=document.querySelector('.upd-tr');
+  if(existing){var eid=existing.dataset.for; existing.remove(); if(eid===rid) return;}
+  var mainRow=document.getElementById('drow-'+rid); if(!mainRow) return;
+  var sOpts=(dd.statuses||[]).map(function(s){return'<option value="'+esc(s)+'">'+esc(s)+'</option>';}).join('');
+  var tr=document.createElement('tr');
+  tr.className='upd-tr'; tr.dataset.for=rid;
+  tr.innerHTML='<td colspan="8" style="padding:14px 13px">'
+    +'<div class="upd-tr-inner">'
+    +'<div class="upd-tr-field"><span class="upd-tr-label">Status *</span>'
+    +'<select class="upd-tr-input" id="us-'+rid+'"><option value="">— Select —</option>'+sOpts+'</select></div>'
+    +'<div class="upd-tr-field" style="flex:2"><span class="upd-tr-label">How / Attachment</span>'
+    +'<input type="text" class="upd-tr-input" id="ur-'+rid+'" placeholder="Describe how it was done or paste a link…"/></div>'
+    +'<div style="display:flex;gap:8px;align-self:flex-end">'
+    +'<button class="btn btn-green btn-sm" id="usubmit-'+rid+'" onclick="submitUpd(\''+rid+'\',false)"><span>Update</span></button>'
+    +'<button class="btn btn-ghost btn-sm" onclick="this.closest(\'.upd-tr\').remove()">Cancel</button>'
+    +'</div></div></td>';
+  mainRow.insertAdjacentElement('afterend',tr);
+  var sel=document.getElementById('us-'+rid);
+  if(sel&&mainRow.dataset.status) sel.value=mainRow.dataset.status;
+}
+
+/* Status change handler — require remarks for Completed */
+function onStatusChange(sel,rid,isMobile){}
+
+/* Submit update */
+function submitUpd(rid,isMobile){
+  var sid=isMobile?'mus-'+rid:'us-'+rid;
+  var rid2=isMobile?'mur-'+rid:'ur-'+rid;
+  var bid=isMobile?'musubmit-'+rid:'usubmit-'+rid;
+  var status=(document.getElementById(sid)||{}).value||'';
+  var remarks=(document.getElementById(rid2)||{}).value||'';
+  if(!status){toast('Please select a status','err');return;}
+  if(status.toLowerCase()==='completed'&&!remarks.trim()){
+    toast('Please fill in How / Attachment before marking Completed','err');
+    var ri=document.getElementById(rid2);
+    if(ri){ri.style.borderColor='var(--danger)';ri.focus();}
+    return;
+  }
+  var btn=document.getElementById(bid);
+  if(btn){btn.disabled=true;btn.querySelector('span').textContent='Updating…';}
+  google.script.run
+    .withSuccessHandler(function(r){
+      if(btn){btn.disabled=false;btn.querySelector('span').textContent=isMobile?'Update Task':'Update';}
+      if(r.error){toast('Error: '+r.error,'err');return;}
+      toast(r.isCompleted?'Task marked completed!':'Task updated!','ok');
+      if(r.isCompleted){
+        var mc=document.querySelector('[data-rowid="'+rid+'"]'); if(mc) mc.remove();
+        var dr=document.getElementById('drow-'+rid); if(dr) dr.remove();
+        var du=document.querySelector('.upd-tr[data-for="'+rid+'"]'); if(du) du.remove();
+        var rem=document.querySelectorAll('[data-rowid]').length;
+        var b=document.getElementById('pendBadge');
+        if(rem>0){b.textContent=rem;b.style.display='inline-flex';}else{b.style.display='none';}
+      } else {
+        var mc2=document.querySelector('[data-rowid="'+rid+'"]');
+        if(mc2){
+          mc2.dataset.status=status;
+          var mb=mc2.querySelector('.tc-top .bdg');
+          if(mb){mb.className='bdg '+bdgCls(status);mb.textContent=status;}
+          closeMUpd(rid);
+        }
+        var dr2=document.getElementById('drow-'+rid);
+        if(dr2){
+          dr2.dataset.status=status;
+          var db=dr2.querySelector('.bdg');
+          if(db){db.className='bdg '+bdgCls(status);db.textContent=status;}
+          var du2=document.querySelector('.upd-tr[data-for="'+rid+'"]'); if(du2) du2.remove();
+        }
+      }
+    })
+    .withFailureHandler(function(e){
+      if(btn){btn.disabled=false;btn.querySelector('span').textContent=isMobile?'Update Task':'Update';}
+      toast('Error: '+e.message,'err');
+    })
+    .updateTask({
+      rowId:rid,status:status,remarks:remarks,
+      updatedByName:(currentUser?currentUser.name:''),
+      updatedByEmail:(currentUser?currentUser.email:'')
+    });
+}
+
+/* ══ ALL TASKS ═══════════════════════════════════════════════ */
+function loadAll(){
+  setLoad('mAll'); setLoad('dAll');
+  google.script.run
+    .withSuccessHandler(function(r){
+      if(r.error){setErr2('mAll',r.error);setErr2('dAll',r.error);return;}
+      allTasks=r.tasks||[];
+      renderAll(allTasks);
+    })
+    .withFailureHandler(function(e){setErr2('mAll',e.message);setErr2('dAll',e.message);})
+    .getTasks('all',currentUser);
+}
+
+function renderAll(tasks){
+  var ml=document.getElementById('mAll');
+  if(!tasks||!tasks.length){
+    var em='<div class="empty"><div class="empty-ttl">No tasks yet</div></div>';
+    ml.innerHTML=em; document.getElementById('dAll').innerHTML=em; return;
+  }
+  var mh='';
+  tasks.forEach(function(t){
+    mh+='<div class="task-card" data-dept="'+esc(t.department)+'" data-status="'+esc(t.status)+'">'
+      +'<div class="tc-top">'
+      +'<div class="tc-title">'+esc(t.task)+'</div>'
+      +'<span class="bdg '+bdgCls(t.status)+'">'+esc(t.status||'—')+'</span>'
+      +'</div>'
+      +'<div class="tc-meta">'
+      +'<div class="tc-meta-item">Department<span>'+esc(t.department)+'</span></div>'
+      +'<div class="tc-meta-item">Deadline<span>'+esc(t.plannedWhen)+'</span></div>'
+      +'<div class="tc-meta-item">Date<span>'+esc(t.date)+'</span></div>'
+      +'<div class="tc-meta-item">Completed<span>'+esc(t.actualDate||'—')+'</span></div>'
+      +'<div class="tc-meta-item">Assigned By<span>'+esc(t.assignedBy)+'</span></div>'
+      +'</div>'
+      +(t.remarks?'<div class="tc-remark"><strong>How / Attachment</strong>'+linkify(esc(t.remarks))+'</div>':'')
+      +'</div>';
+  });
+  ml.innerHTML=mh;
+
+  var th='<table><colgroup>'
+    +'<col class="col-date"><col class="col-task"><col class="col-dept"><col class="col-emp">'
+    +'<col class="col-dl"><col class="col-status"><col class="col-actual"><col class="col-remarks"><col class="col-by">'
+    +'</colgroup><thead><tr>'
+    +'<th>Date</th><th>Task</th><th>Dept</th><th>Assigned To</th>'
+    +'<th>Deadline</th><th>Status</th><th>Actual Date</th><th>How / Attachment</th><th>By</th>'
+    +'</tr></thead><tbody>';
+  tasks.forEach(function(t){
+    th+='<tr data-dept="'+esc(t.department)+'" data-status="'+esc(t.status)+'">'
+      +'<td style="white-space:nowrap;font-size:12px">'+esc(t.date)+'</td>'
+      +'<td style="font-weight:600">'+esc(t.task)+'</td>'
+      +'<td style="font-size:12px">'+esc(t.department)+'</td>'
+      +'<td style="font-size:12px">'+esc(t.assignedTo)+'</td>'
+      +'<td style="white-space:nowrap;font-size:12px">'+esc(t.plannedWhen)+'</td>'
+      +'<td><span class="bdg '+bdgCls(t.status)+'">'+esc(t.status||'—')+'</span></td>'
+      +'<td style="white-space:nowrap;font-size:12px">'+esc(t.actualDate||'—')+'</td>'
+      +'<td class="rm-cell" onclick="toggleRm(this)">'
+      +'<div class="rm-inner">'+(t.remarks?linkify(esc(t.remarks)):'—')+'</div>'
+      +(t.remarks&&t.remarks.length>60?'<div class="rm-hint">tap to expand</div>':'')
+      +'</td>'
+      +'<td style="color:var(--text3);font-size:11px">'+esc(t.assignedBy)+'</td>'
+      +'</tr>';
+  });
+  th+='</tbody></table>';
+  document.getElementById('dAll').innerHTML=th;
+}
+
+/* ══ DASHBOARD ═══════════════════════════════════════════════ */
+function loadDash(){
+  document.getElementById('wDash').innerHTML='<div class="loader"><div class="spin"></div><p>Loading…</p></div>';
+  google.script.run.withSuccessHandler(renderDash)
+    .withFailureHandler(function(e){document.getElementById('wDash').innerHTML='<div class="empty"><div class="empty-ttl">'+esc(e.message)+'</div></div>';})
+    .getDashboardData(currentUser);
+}
+function renderDash(r){
+  var w=document.getElementById('wDash');
+  if(!r||r.error){w.innerHTML='<div class="empty"><div class="empty-ttl">'+(r?esc(r.error):'Error')+'</div></div>';return;}
+  var t=r.totals, total=t.onTime+t.late+t.overdue+t.pending;
+  var html='<div class="dash-grid">'
+    +'<div class="sc sc-green"><div class="sc-n">'+t.onTime+'</div><div class="sc-l">On Time</div></div>'
+    +'<div class="sc sc-yellow"><div class="sc-n">'+t.late+'</div><div class="sc-l">After Deadline</div></div>'
+    +'<div class="sc sc-red"><div class="sc-n">'+t.overdue+'</div><div class="sc-l">Overdue</div></div>'
+    +'<div class="sc sc-gray"><div class="sc-n">'+t.pending+'</div><div class="sc-l">Pending</div></div>'
+    +'</div>';
+  if(!total){html+='<div class="empty"><div class="empty-ttl">No tasks yet</div></div>';w.innerHTML=html;return;}
+  var bars=[
+    {lbl:'Completed on time',val:t.onTime,bg:'#1B4B35',track:'#E4EFEA',fc:'#0E3221'},
+    {lbl:'Completed after deadline',val:t.late,bg:'#BA7517',track:'#FFF7E6',fc:'#7A4800'},
+    {lbl:'Overdue',val:t.overdue,bg:'#8A1A1A',track:'#FDEAEA',fc:'#8A1A1A'},
+    {lbl:'Pending',val:t.pending,bg:'#888780',track:'#F1EFE8',fc:'#444441'},
+  ];
+  html+='<div class="dash-bars"><div style="font-size:13px;font-weight:600;color:var(--text2);margin-bottom:16px">'+total+' total tasks</div>';
+  bars.forEach(function(b){
+    var pct=Math.round((b.val/total)*100);
+    html+='<div class="bar-item">'
+      +'<div class="bar-lbl"><span style="color:'+b.fc+';font-weight:600">'+b.lbl+'</span><span style="color:'+b.fc+';font-weight:700">'+b.val+' ('+pct+'%)</span></div>'
+      +'<div class="bar-track" style="background:'+b.track+'"><div class="bar-fill" style="width:'+pct+'%;background:'+b.bg+'"></div></div>'
+      +'</div>';
+  });
+  html+='</div>';
+  w.innerHTML=html;
+}
+
+/* ══ FILTERS ═════════════════════════════════════════════════ */
+var _pF={q:'',dept:'',status:''}, _aF={q:'',dept:'',status:''};
+function filterCards(tab,q,val,field){
+  var f=tab==='pending'?_pF:_aF;
+  if(q!==undefined&&!field) f.q=q.toLowerCase();
+  if(field==='dept') f.dept=val||'';
+  if(field==='status') f.status=val||'';
+  var src=tab==='pending'?allPending:allTasks;
+  var out=src.filter(function(t){
+    return (!f.q||(t.task+t.department+t.assignedTo+t.assignedBy).toLowerCase().includes(f.q))
+        && (!f.dept||t.department===f.dept)
+        && (!f.status||t.status===f.status);
+  });
+  if(tab==='pending') renderPending(out); else renderAll(out);
+}
+
+/* ══ HELPERS ═════════════════════════════════════════════════ */
+function setLoad(id){document.getElementById(id).innerHTML='<div class="loader"><div class="spin"></div><p>Loading…</p></div>';}
+function setErr2(id,msg){document.getElementById(id).innerHTML='<div class="empty"><div class="empty-ttl">'+esc(msg)+'</div></div>';}
+function bdgCls(s){
+  if(!s) return 'bdg-other';
+  var l=s.toLowerCase();
+  if(l.includes('complet')) return 'bdg-completed';
+  if(l.includes('progress')||l.includes('wip')) return 'bdg-inprogress';
+  if(l.includes('pend')) return 'bdg-pending';
+  return 'bdg-other';
+}
+function toggleRm(td){td.classList.toggle('expanded');var h=td.querySelector('.rm-hint');if(h)h.style.display=td.classList.contains('expanded')?'none':'';}
+function esc(s){if(!s)return'';return s.toString().replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+function linkify(s){return s.replace(/(https?:\/\/[^\s<>"]+)/g,'<a href="$1" target="_blank" rel="noopener" style="color:var(--accent);word-break:break-all;text-decoration:underline">$1<\/a>');}
+function toast(msg,type){var el=document.getElementById('toast');el.textContent=msg;el.className='toast show '+(type||'info');clearTimeout(window._tt);window._tt=setTimeout(function(){el.className='toast';},3500);}
+</script>
+</body>
+</html>

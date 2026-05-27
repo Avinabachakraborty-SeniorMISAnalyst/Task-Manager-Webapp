@@ -1,0 +1,501 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Task Manager – Director</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;1,400&display=swap" rel="stylesheet"/>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#F4F3EF;--surface:#FFFFFF;--surface2:#F9F8F5;
+  --border:#E2DFD8;--border2:#CCCAC2;
+  --text:#1C1B18;--text2:#6A6860;--text3:#9C9A94;
+  --accent:#1B4B35;--accent-lt:#E4EFEA;--accent-tx:#0E3221;
+  --warn-bg:#FFF7E6;--warn:#7A4800;
+  --danger-bg:#FDEAEA;--danger:#8A1A1A;
+  --blue-bg:#E8EFF8;--blue:#1A3A6B;
+  --r:10px;--rs:6px;
+}
+body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);font-size:14px;line-height:1.5;min-height:100vh}
+.hdr{background:var(--surface);border-bottom:1px solid var(--border);height:54px;display:flex;align-items:center;justify-content:space-between;padding:0 24px;position:sticky;top:0;z-index:100}
+.hdr-brand{font-size:15px;font-weight:600;letter-spacing:-.01em;display:flex;align-items:center;gap:10px}
+.brand-pip{width:8px;height:8px;border-radius:50%;background:var(--accent)}
+.user-chip{display:flex;align-items:center;gap:8px;background:var(--surface2);border:1px solid var(--border);border-radius:20px;padding:4px 12px 4px 4px;font-size:13px;max-width:240px;position:relative;cursor:pointer;user-select:none}
+.user-chip:hover{background:var(--border)}
+.user-menu{position:absolute;top:calc(100% + 8px);right:0;background:var(--surface);border:1px solid var(--border);border-radius:12px;box-shadow:0 8px 24px rgba(0,0,0,.12);min-width:190px;overflow:hidden;display:none;z-index:500}
+.user-menu.open{display:block}
+.user-menu-info{padding:12px 16px 10px;border-bottom:1px solid var(--border)}
+.user-menu-name{font-size:14px;font-weight:700;color:var(--text)}
+.user-menu-role{font-size:11px;color:var(--text3);margin-top:2px;text-transform:uppercase;letter-spacing:.05em}
+.user-menu-btn{display:flex;align-items:center;gap:10px;width:100%;padding:11px 16px;background:transparent;border:none;font-family:'DM Sans',sans-serif;font-size:14px;font-weight:600;color:var(--danger,#8A1A1A);cursor:pointer;text-align:left;transition:background .12s}
+.user-menu-btn:hover{background:#FDEAEA}
+.avatar{width:28px;height:28px;border-radius:50%;background:var(--accent);color:#fff;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:600}
+.role-pill{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;padding:2px 8px;border-radius:20px;background:var(--accent-lt);color:var(--accent-tx)}
+.tabs-wrap{max-width:1120px;margin:0 auto;padding:16px 24px 0}
+.tabs{display:flex;gap:4px}
+.tab{padding:8px 20px;border-radius:var(--rs) var(--rs) 0 0;background:transparent;border:1px solid transparent;border-bottom:none;font-size:13px;font-weight:500;color:var(--text2);cursor:pointer;transition:all .15s}
+.tab:hover{background:var(--surface);color:var(--text)}
+.tab.active{background:var(--surface);border-color:var(--border);color:var(--text);font-weight:600}
+.tab-badge{display:inline-flex;align-items:center;justify-content:center;background:var(--danger);color:#fff;border-radius:10px;font-size:10px;font-weight:700;min-width:18px;height:16px;padding:0 5px;margin-left:6px}
+.main{max-width:1120px;margin:0 auto;padding:0 24px 40px}
+.panel{background:var(--surface);border:1px solid var(--border);border-top:none;border-radius:0 var(--r) var(--r) var(--r);padding:28px;min-height:380px}
+.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:20px 28px}
+.fg{display:flex;flex-direction:column;gap:6px}
+.fg.full{grid-column:1/-1}
+label{font-size:11px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:.05em}
+input[type=date],input[type=text],select,textarea{width:100%;padding:9px 12px;border:1px solid var(--border2);border-radius:var(--rs);font-family:'DM Sans',sans-serif;font-size:14px;color:var(--text);background:var(--surface2);outline:none;transition:border-color .15s}
+input:focus,select:focus,textarea:focus{border-color:var(--accent);background:#fff}
+textarea{resize:vertical;min-height:80px}
+.btn{padding:9px 20px;border-radius:var(--rs);font-family:'DM Sans',sans-serif;font-size:14px;font-weight:600;cursor:pointer;border:none;display:inline-flex;align-items:center;gap:7px;transition:all .15s}
+.btn-p{background:var(--accent);color:#fff}.btn-p:hover{background:var(--accent-tx)}.btn-p:disabled{opacity:.5;cursor:not-allowed}
+.btn-o{background:transparent;color:var(--accent);border:1.5px solid var(--accent)}.btn-o:hover{background:var(--accent-lt)}
+.btn-sm{padding:5px 13px;font-size:12px}
+.btn-row{display:flex;gap:12px;margin-top:24px}
+.toast{position:fixed;bottom:24px;right:24px;padding:11px 18px;border-radius:var(--r);font-size:13px;font-weight:500;opacity:0;transform:translateY(8px);transition:all .25s;z-index:999;max-width:300px;pointer-events:none}
+.toast.show{opacity:1;transform:translateY(0)}
+.toast.ok{background:var(--accent);color:#fff}
+.toast.err{background:var(--danger);color:#fff}
+.toast.info{background:var(--text);color:#fff}
+.tbar{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:14px}
+.tbar input[type=text]{width:200px;padding:7px 11px;font-size:13px}
+.tbar select{width:auto;padding:7px 11px;font-size:13px}
+.twrap{overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-size:13px;table-layout:fixed}
+th{text-align:left;padding:9px 13px;font-size:11px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.05em;border-bottom:1.5px solid var(--border);white-space:nowrap;background:var(--surface2)}
+td{padding:11px 13px;border-bottom:1px solid var(--border);vertical-align:top}
+tr:last-child td{border-bottom:none}
+tr:hover td{background:var(--surface2)}
+.bdg{display:inline-block;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:600}
+.bdg-p{background:var(--warn-bg);color:var(--warn)}
+.bdg-c{background:var(--accent-lt);color:var(--accent-tx)}
+.bdg-i{background:var(--blue-bg);color:var(--blue)}
+.bdg-d{background:var(--surface2);color:var(--text2);border:1px solid var(--border)}
+.loader{display:flex;align-items:center;justify-content:center;padding:60px;color:var(--text3);gap:12px}
+.spin{width:20px;height:20px;border:2px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:spin .8s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.empty{text-align:center;padding:60px 20px;color:var(--text3)}
+.empty-title{font-size:16px;font-weight:600;color:var(--text2);margin-bottom:6px}
+.dash-totals{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px;margin-bottom:28px}.stat-card{border-radius:var(--r);padding:18px 20px;display:flex;flex-direction:column;gap:6px}.stat-card .sc-num{font-size:28px;font-weight:700;line-height:1}.stat-card .sc-lbl{font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:.05em}.sc-green{background:#E4EFEA;}.sc-green .sc-num,.sc-green .sc-lbl{color:#0E3221}.sc-yellow{background:#FFF7E6}.sc-yellow .sc-num,.sc-yellow .sc-lbl{color:#7A4800}.sc-red{background:#FDEAEA}.sc-red .sc-num,.sc-red .sc-lbl{color:#8A1A1A}.sc-gray{background:#F1EFE8}.sc-gray .sc-num,.sc-gray .sc-lbl{color:#2C2C2A}.dash-table-wrap{overflow-x:auto}.dash-table{width:100%;border-collapse:collapse;font-size:13px;table-layout:fixed}.dash-table th{padding:9px 14px;font-size:11px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.05em;border-bottom:1.5px solid var(--border);background:var(--surface2);text-align:left}.dash-table td{padding:11px 14px;border-bottom:1px solid var(--border);vertical-align:middle}.dash-table tr:last-child td{border-bottom:none}.dash-table tr:hover td{background:var(--surface2)}.emp-bar-wrap{display:flex;align-items:center;gap:6px;min-width:160px}.emp-bar{height:10px;border-radius:5px;min-width:2px}.bar-green{background:#1B4B35}.bar-yellow{background:#BA7517}.bar-red{background:#8A1A1A}.bar-gray{background:#888780}.count-pill{display:inline-flex;align-items:center;justify-content:center;border-radius:20px;font-size:11px;font-weight:700;padding:2px 9px;min-width:28px}.pill-green{background:#E4EFEA;color:#0E3221}.pill-yellow{background:#FFF7E6;color:#7A4800}.pill-red{background:#FDEAEA;color:#8A1A1A}.pill-gray{background:#F1EFE8;color:#2C2C2A}.col-date{width:90px}.col-task{width:18%}.col-dept{width:10%}.col-emp{width:10%}.col-dl{width:90px}.col-status{width:100px}.col-actual{width:90px}.col-remarks{width:16%}.col-by{width:10%}.remarks-cell{color:var(--text2);cursor:pointer;}.remarks-inner{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;word-break:break-word;}.remarks-cell.expanded .remarks-inner{display:block;-webkit-line-clamp:unset;white-space:pre-wrap;}.remarks-cell .expand-hint{font-size:10px;color:var(--text3);margin-top:3px;user-select:none;}.remarks-cell.expanded .expand-hint{display:none;}@media(max-width:640px){.form-grid{grid-template-columns:1fr}.panel{padding:16px}.tabs-wrap,.main{padding-left:16px;padding-right:16px}.dash-totals{grid-template-columns:1fr 1fr} div[style*="grid-template-columns:1fr 1fr"]{grid-template-columns:1fr!important}}
+
+/* ── LOGIN OVERLAY ── */
+.login-overlay{position:fixed;top:0;left:0;right:0;bottom:0;background:var(--bg);z-index:9999;display:flex;align-items:center;justify-content:center;padding:20px;}
+.login-card{background:var(--surface);border-radius:var(--r);border:1px solid var(--border);width:100%;max-width:400px;overflow:hidden;box-shadow:0 8px 32px rgba(0,0,0,.12);}
+.login-header{background:var(--accent);padding:28px 24px 20px;text-align:center;}
+.login-header h1{color:#fff;font-size:22px;font-weight:700;margin:0 0 4px}
+.login-header p{color:rgba(255,255,255,.7);font-size:13px;margin:0}
+.login-body{padding:28px 24px}
+.login-body .lbl{font-size:12px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:.07em;display:block;margin-bottom:7px}
+.login-err{background:var(--danger-bg);color:var(--danger);border:1px solid var(--danger);border-radius:var(--rs);padding:10px 14px;font-size:13px;margin-bottom:16px;display:none}
+.login-body input[type=text],
+.login-body input[type=password]{width:100%;padding:14px 16px;border:2px solid var(--border2);border-radius:var(--rs);font-family:'DM Sans',sans-serif;font-size:16px;color:var(--text);background:var(--surface2);outline:none;margin-bottom:16px;box-sizing:border-box;min-height:52px;-webkit-appearance:none;appearance:none;transition:border-color .15s,background .15s}
+.login-body input[type=text]:focus,
+.login-body input[type=password]:focus{border-color:var(--accent);background:#fff;box-shadow:0 0 0 3px rgba(29,63,110,.08)}
+.login-btn{width:100%;padding:14px;background:var(--accent);color:#fff;border:none;border-radius:var(--rs);font-family:'DM Sans',sans-serif;font-size:16px;font-weight:700;cursor:pointer;min-height:52px;}
+.login-btn:disabled{opacity:.6;cursor:not-allowed}
+
+</style>
+</head>
+<body>
+
+<div class="login-overlay" id="loginOverlay">
+  <div class="login-card">
+    <div class="login-header">
+      <h1>Task Manager</h1>
+      <p>Director / Owner Portal</p>
+    </div>
+    <div class="login-body">
+      <div class="login-err" id="loginErr"></div>
+      <span class="lbl">User ID</span>
+      <input type="text" id="loginId" placeholder="Enter your User ID" onkeydown="if(event.key==='Enter')doLogin()"/>
+      <span class="lbl">Password</span>
+      <input type="password" id="loginPass" placeholder="Enter your password" onkeydown="if(event.key==='Enter')doLogin()"/>
+      <button class="login-btn" id="loginBtn" onclick="doLogin()">Sign In</button>
+    </div>
+  </div>
+</div>
+
+
+<div class="hdr">
+  <div class="hdr-brand"><div class="brand-pip"></div>Task Manager <span style="color:var(--text3);font-weight:400;font-size:13px;margin-left:4px">/ Director</span></div>
+  <div class="user-chip" id="userChip" onclick="toggleUserMenu(event)">
+    <div class="avatar" id="uAvatar" style="background:#ccc;color:#888">?</div>
+    <span id="uName" style="color:var(--text3)">Not signed in</span>
+    <span class="role-pill" id="uRole" style="display:none"></span>
+    <div class="user-menu" id="userMenu">
+      <div class="user-menu-info">
+        <div class="user-menu-name" id="menuName">—</div>
+        <div class="user-menu-role" id="menuRole">—</div>
+      </div>
+      <button class="user-menu-btn" onclick="doLogout()">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
+          <polyline points="16 17 21 12 16 7"/>
+          <line x1="21" y1="12" x2="9" y2="12"/>
+        </svg>
+        Sign Out
+      </button>
+    </div>
+  </div>
+</div>
+
+<div class="tabs-wrap">
+  <div class="tabs">
+    <button class="tab active" onclick="switchTab('new')">New Task</button>
+    <button class="tab" onclick="switchTab('pending')" id="tabPending">Pending Tasks <span class="tab-badge" id="pendBadge" style="display:none">0</span></button>
+    <button class="tab" onclick="switchTab('all')">All Tasks</button>
+    <button class="tab" onclick="switchTab('dash')">Dashboard</button>
+  </div>
+</div>
+
+<div class="main">
+  <div class="panel" id="pNew">
+    <div class="form-grid">
+      <div class="fg"><label>Date *</label><input type="date" id="fDate"/></div>
+      <div class="fg"><label>Deadline (Planned When) *</label><input type="date" id="fPlanned"/></div>
+      <div class="fg full"><label>Task Description *</label><textarea id="fTask" placeholder="Describe the task…"></textarea></div>
+      <div class="fg"><label>Department *</label><select id="fDept"><option value="">— Select Department —</option></select></div>
+      <div class="fg"><label>Assigned To *</label><select id="fEmp"><option value="">— Select Employee —</option></select></div>
+    </div>
+    <div class="btn-row">
+      <button class="btn btn-p" id="btnSend" onclick="sendTask()"><span>Send Task</span></button>
+      <button class="btn btn-o" onclick="clearForm()">Clear</button>
+    </div>
+  </div>
+
+  <div class="panel" id="pPending" style="display:none">
+    <div class="tbar">
+      <input type="text" placeholder="Search…" onkeyup="filterText('tPend',this.value)"/>
+      <select onchange="filterDept('tPend',this.value)" id="fPendDept"><option value="">All Departments</option></select>
+      <select onchange="filterStatus('tPend',this.value)" id="fPendStatus"><option value="">All Statuses</option></select>
+      <button class="btn btn-o btn-sm" onclick="loadPending()">↻ Refresh</button>
+    </div>
+    <div class="twrap" id="wPend"><div class="loader"><div class="spin"></div>Loading…</div></div>
+  </div>
+
+  <div class="panel" id="pAll" style="display:none">
+    <div class="tbar">
+      <input type="text" placeholder="Search…" onkeyup="filterText('tAll',this.value)"/>
+      <select onchange="filterDept('tAll',this.value)" id="fAllDept"><option value="">All Departments</option></select>
+      <select onchange="filterStatus('tAll',this.value)" id="fAllStatus"><option value="">All Statuses</option></select>
+      <button class="btn btn-o btn-sm" onclick="loadAll()">↻ Refresh</button>
+    </div>
+    <div class="twrap" id="wAll"><div class="loader"><div class="spin"></div>Loading…</div></div>
+  </div>
+
+  <div class="panel" id="pDash" style="display:none">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;flex-wrap:wrap;gap:10px">
+      <div style="font-size:15px;font-weight:600;color:var(--text)">Team Task Overview</div>
+      <button class="btn btn-o btn-sm" onclick="loadDash()">↻ Refresh</button>
+    </div>
+    <div id="wDash"><div class="loader"><div class="spin"></div>Loading…</div></div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+var dd = {departments:[],employees:[],statuses:[]};
+var activeTab = 'new';
+var currentUser = null;
+
+function doLogin(){
+  var uid=(document.getElementById('loginId')||{}).value||'';
+  var pass=(document.getElementById('loginPass')||{}).value||'';
+  var btn=document.getElementById('loginBtn');
+  var err=document.getElementById('loginErr');
+  if(!uid||!pass){err.textContent='Please enter User ID and Password.';err.style.display='block';return;}
+  btn.disabled=true;btn.textContent='Signing in…';
+  err.style.display='none';
+  google.script.run
+    .withSuccessHandler(function(r){
+      btn.disabled=false;btn.textContent='Sign In';
+      if(r.error){err.textContent=r.error;err.style.display='block';return;}
+      currentUser=r;
+      document.getElementById('loginOverlay').style.display='none';
+      var ini=(r.name||'?').split(' ').map(function(w){return w[0]||'';}).join('').substring(0,2).toUpperCase();
+      var av=document.getElementById('uAvatar');av.textContent=ini;av.style.background='';av.style.color='';
+      var nm=document.getElementById('uName');nm.textContent=r.name||'Director';nm.style.color='';
+      var rl=document.getElementById('uRole');rl.textContent=(r.role||'director').toUpperCase();rl.style.display='';
+      var mn=document.getElementById('menuName');if(mn)mn.textContent=r.name||'Director';
+      var mr=document.getElementById('menuRole');if(mr)mr.textContent=(r.role||'director').toUpperCase();
+      google.script.run.withSuccessHandler(initDD)
+        .withFailureHandler(function(e){toast('Dropdown error','err');})
+        .getDropdownData();
+    })
+    .withFailureHandler(function(e){btn.disabled=false;btn.textContent='Sign In';err.textContent='Connection error.';err.style.display='block';})
+    .loginWithCredentials(uid,pass);
+}
+
+window.addEventListener('load', function(){
+  setToday();
+  document.getElementById('loginId').focus();
+});
+
+function initUser(u){
+  if(!u||u.error){ toast('User error: '+(u?u.error:'unknown'),'err'); return; }
+  currentUser = u;
+  var ini = (u.name||'D').split(' ').map(function(w){return w[0]||'';}).join('').substring(0,2).toUpperCase();
+  var av=document.getElementById('uAvatar');av.textContent=ini;av.style.background='';av.style.color='';
+  var nm=document.getElementById('uName');nm.textContent=u.name||'Director';nm.style.color='';
+  var rl=document.getElementById('uRole');rl.textContent=(u.role||'director').toUpperCase();rl.style.display='';
+  var mn=document.getElementById('menuName');if(mn)mn.textContent=u.name||'Director';
+  var mr=document.getElementById('menuRole');if(mr)mr.textContent=(u.role||'director').toUpperCase();
+  google.script.run.withSuccessHandler(initDD)
+    .withFailureHandler(function(e){ toast('Dropdown error: '+e.message,'err'); })
+    .getDropdownData();
+}
+
+function initDD(data){
+  dd = data;
+  var deptSel = document.getElementById('fDept');
+  var empSel  = document.getElementById('fEmp');
+  (data.departments||[]).forEach(function(d){
+    deptSel.innerHTML += '<option value="'+esc(d)+'">'+esc(d)+'</option>';
+    ['fPendDept','fAllDept'].forEach(function(id){
+      var el=document.getElementById(id); if(el) el.innerHTML+='<option value="'+esc(d)+'">'+esc(d)+'</option>';
+    });
+  });
+  (data.employees||[]).forEach(function(e){
+    empSel.innerHTML += '<option value="'+esc(e.name)+'" data-email="'+esc(e.email)+'" data-phone="'+esc(e.phone||'')+'">'+esc(e.name)+'</option>';
+  });
+  (data.statuses||[]).forEach(function(s){
+    ['fPendStatus','fAllStatus'].forEach(function(id){
+      var el=document.getElementById(id); if(el) el.innerHTML+='<option value="'+esc(s)+'">'+esc(s)+'</option>';
+    });
+  });
+}
+
+function setToday(){ document.getElementById('fDate').value=new Date().toISOString().split('T')[0]; }
+
+function switchTab(t){
+  activeTab=t;
+  ['new','pending','all','dash'].forEach(function(x,i){
+    document.getElementById('p'+cap(x)).style.display = x===t?'block':'none';
+    document.querySelectorAll('.tab')[i].classList.toggle('active',x===t);
+  });
+  if(t==='pending') loadPending();
+  if(t==='all') loadAll();
+  if(t==='dash') loadDash();
+}
+function cap(s){ return s.charAt(0).toUpperCase()+s.slice(1); }
+
+function sendTask(){
+  var date=document.getElementById('fDate').value;
+  var task=document.getElementById('fTask').value.trim();
+  var dept=document.getElementById('fDept').value;
+  var empName=document.getElementById('fEmp').value;
+  var planned=document.getElementById('fPlanned').value;
+  if(!date||!task||!dept||!empName||!planned){ toast('Fill in all required fields','err'); return; }
+  var opt=document.querySelector('#fEmp option[value="'+empName+'"]');
+  var email=opt?opt.dataset.email:'';
+  var phone=opt?opt.dataset.phone:'';
+  var btn=document.getElementById('btnSend');
+  btn.disabled=true; btn.querySelector('span').textContent='Sending…';
+  google.script.run
+    .withSuccessHandler(function(r){
+      btn.disabled=false; btn.querySelector('span').textContent='Send Task';
+      if(r.error){ toast('Error: '+r.error,'err'); }
+      else{ toast('Task sent successfully!','ok'); clearForm(); loadPending(); }
+    })
+    .withFailureHandler(function(e){ btn.disabled=false; btn.querySelector('span').textContent='Send Task'; toast('Error: '+e.message,'err'); })
+    .sendTask({date:date,task:task,department:dept,assignedTo:empName,email:email,phone:phone,plannedWhen:planned,assignedByName:(currentUser?currentUser.name:'Director'),assignedByEmail:(currentUser?currentUser.email:'')});
+}
+function clearForm(){ setToday(); ['fTask','fPlanned'].forEach(function(id){document.getElementById(id).value='';}); ['fDept','fEmp'].forEach(function(id){document.getElementById(id).selectedIndex=0;}); }
+
+function loadPending(){
+  document.getElementById('wPend').innerHTML='<div class="loader"><div class="spin"></div>Loading…</div>';
+  google.script.run
+    .withSuccessHandler(function(r){
+      if(r.error){ document.getElementById('wPend').innerHTML='<div class="empty"><div class="empty-title">'+esc(r.error)+'</div></div>'; return; }
+      renderTable('wPend','tPend',r.tasks);
+      var b=document.getElementById('pendBadge');
+      if(r.tasks.length>0){b.textContent=r.tasks.length;b.style.display='inline-flex';}else{b.style.display='none';}
+    })
+    .withFailureHandler(function(e){ document.getElementById('wPend').innerHTML='<div class="empty"><div class="empty-title">'+esc(e.message)+'</div></div>'; })
+    .getTasks('pending', currentUser);
+}
+
+function loadAll(){
+  document.getElementById('wAll').innerHTML='<div class="loader"><div class="spin"></div>Loading…</div>';
+  google.script.run
+    .withSuccessHandler(function(r){
+      if(r.error){ document.getElementById('wAll').innerHTML='<div class="empty"><div class="empty-title">'+esc(r.error)+'</div></div>'; return; }
+      renderTable('wAll','tAll',r.tasks);
+    })
+    .withFailureHandler(function(e){ document.getElementById('wAll').innerHTML='<div class="empty"><div class="empty-title">'+esc(e.message)+'</div></div>'; })
+    .getTasks('all', currentUser);
+}
+
+function renderTable(wrapId,tableId,tasks){
+  var w=document.getElementById(wrapId);
+  if(!tasks||tasks.length===0){ w.innerHTML='<div class="empty"><div class="empty-title">No tasks found</div></div>'; return; }
+  var html='<table id="'+tableId+'"><colgroup><col class="col-date"><col class="col-task"><col class="col-dept"><col class="col-emp"><col class="col-dl"><col class="col-status"><col class="col-actual"><col class="col-remarks"><col class="col-by"></colgroup><thead><tr><th>Date</th><th>Task</th><th>Department</th><th>Assigned To</th><th>Deadline</th><th>Status</th><th>Actual Date</th><th>How / Attachment</th><th>Assigned By</th></tr></thead><tbody>';
+  tasks.forEach(function(t){
+    html+='<tr data-dept="'+esc(t.department)+'" data-status="'+esc(t.status)+'">'
+      +'<td style="white-space:nowrap">'+esc(t.date)+'</td>'
+      +'<td style="max-width:200px">'+esc(t.task)+'</td>'
+      +'<td>'+esc(t.department)+'</td>'
+      +'<td>'+esc(t.assignedTo)+'</td>'
+      +'<td style="white-space:nowrap">'+esc(t.plannedWhen)+'</td>'
+      +'<td><span class="bdg '+bdgClass(t.status)+'">'+esc(t.status||'—')+'</span></td>'
+      +'<td style="white-space:nowrap">'+esc(t.actualDate||'—')+'</td>'
+      +'<td class="remarks-cell" onclick="toggleRemarks(this)">'+'<div class="remarks-inner">'+(t.remarks?linkify(esc(t.remarks)):'—')+'</div>'+(t.remarks&&t.remarks.length>60?'<div class="expand-hint">click to expand</div>':'')+'</td>'
+      +'<td style="color:var(--text3);font-size:12px">'+esc(t.assignedBy)+'</td>'
+      +'</tr>';
+  });
+  html+='</tbody></table>';
+  w.innerHTML=html;
+}
+
+
+function loadDash(){
+  document.getElementById('wDash').innerHTML='<div class="loader"><div class="spin"></div>Loading\u2026</div>';
+  google.script.run
+    .withSuccessHandler(renderDash)
+    .withFailureHandler(function(e){ document.getElementById('wDash').innerHTML='<div class="empty"><div class="empty-title">'+esc(e.message)+'</div></div>'; })
+    .getDashboardData(currentUser);
+}
+
+function renderDash(r){
+  var w=document.getElementById('wDash');
+  if(!r||r.error){ w.innerHTML='<div class="empty"><div class="empty-title">'+(r?esc(r.error):'Error loading')+'</div></div>'; return; }
+
+  var t=r.totals;
+  var grandTotal=t.onTime+t.late+t.overdue+t.pending;
+
+  /* ── Summary cards ── */
+  var html='<div class="dash-totals">'
+    +'<div class="stat-card sc-green"><div class="sc-num">'+t.onTime+'</div><div class="sc-lbl">Completed on time</div></div>'
+    +'<div class="stat-card sc-yellow"><div class="sc-num">'+t.late+'</div><div class="sc-lbl">Completed after deadline</div></div>'
+    +'<div class="stat-card sc-red"><div class="sc-num">'+t.overdue+'</div><div class="sc-lbl">Overdue</div></div>'
+    +'<div class="stat-card sc-gray"><div class="sc-num">'+t.pending+'</div><div class="sc-lbl">Pending</div></div>'
+    +'</div>';
+
+  if(grandTotal===0){
+    html+='<div class="empty"><div class="empty-title">No task data yet — assign some tasks first</div></div>';
+    w.innerHTML=html; return;
+  }
+
+  /* ── Legend ── */
+  html+='<div style="display:flex;gap:20px;flex-wrap:wrap;font-size:12px;margin-bottom:24px">'
+    +'<span style="display:flex;align-items:center;gap:6px"><span style="width:10px;height:10px;border-radius:2px;background:#1B4B35;display:inline-block"></span><span style="color:var(--text2)">On time</span></span>'
+    +'<span style="display:flex;align-items:center;gap:6px"><span style="width:10px;height:10px;border-radius:2px;background:#BA7517;display:inline-block"></span><span style="color:var(--text2)">After deadline</span></span>'
+    +'<span style="display:flex;align-items:center;gap:6px"><span style="width:10px;height:10px;border-radius:2px;background:#8A1A1A;display:inline-block"></span><span style="color:var(--text2)">Overdue</span></span>'
+    +'<span style="display:flex;align-items:center;gap:6px"><span style="width:10px;height:10px;border-radius:2px;background:#888780;display:inline-block"></span><span style="color:var(--text2)">Pending</span></span>'
+    +'</div>';
+
+  /* ── Two sections side by side ── */
+  html+='<div style="display:grid;grid-template-columns:1fr 1fr;gap:24px;align-items:start">';
+
+  /* ── Department section ── */
+  html+='<div>'
+    +'<div style="font-size:13px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:.05em;margin-bottom:12px;padding-bottom:8px;border-bottom:1.5px solid var(--border)">By Department</div>'
+    +'<div class="dash-table-wrap"><table class="dash-table"><thead><tr>'
+    +'<th>Department</th>'
+    +'<th style="text-align:center;color:#0E3221">On Time</th>'
+    +'<th style="text-align:center;color:#7A4800">Late</th>'
+    +'<th style="text-align:center;color:#8A1A1A">Overdue</th>'
+    +'<th style="text-align:center;color:var(--text3)">Pending</th>'
+    +'<th>Bar</th>'
+    +'</tr></thead><tbody>';
+
+  (r.byDept||[]).forEach(function(d){
+    var rt=d.onTime+d.late+d.overdue+d.pending||1;
+    html+=buildRow(d, rt, true);
+  });
+  html+='</tbody></table></div></div>';
+
+  /* ── Employee section ── */
+  html+='<div>'
+    +'<div style="font-size:13px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:.05em;margin-bottom:12px;padding-bottom:8px;border-bottom:1.5px solid var(--border)">By Employee</div>'
+    +'<div class="dash-table-wrap"><table class="dash-table"><thead><tr>'
+    +'<th>Employee</th>'
+    +'<th style="text-align:center;color:#0E3221">On Time</th>'
+    +'<th style="text-align:center;color:#7A4800">Late</th>'
+    +'<th style="text-align:center;color:#8A1A1A">Overdue</th>'
+    +'<th style="text-align:center;color:var(--text3)">Pending</th>'
+    +'<th>Bar</th>'
+    +'</tr></thead><tbody>';
+
+  (r.byEmployee||[]).forEach(function(e){
+    var rt=e.onTime+e.late+e.overdue+e.pending||1;
+    html+=buildRow(e, rt, false);
+  });
+  html+='</tbody></table></div></div>';
+
+  html+='</div>'; /* end grid */
+
+  w.innerHTML=html;
+}
+
+function buildRow(item, rowTotal, isDept){
+  var bw=100;
+  var wG=Math.round(bw*(item.onTime/rowTotal));
+  var wY=Math.round(bw*(item.late/rowTotal));
+  var wR=Math.round(bw*(item.overdue/rowTotal));
+  var wGr=Math.round(bw*(item.pending/rowTotal));
+  return '<tr>'
+    +'<td style="font-weight:500;white-space:nowrap">'+esc(item.name)+'</td>'
+    +'<td style="text-align:center"><span class="count-pill pill-green">'+item.onTime+'</span></td>'
+    +'<td style="text-align:center"><span class="count-pill pill-yellow">'+item.late+'</span></td>'
+    +'<td style="text-align:center"><span class="count-pill pill-red">'+item.overdue+'</span></td>'
+    +'<td style="text-align:center"><span class="count-pill pill-gray">'+item.pending+'</span></td>'
+    +'<td><div class="emp-bar-wrap">'
+    +(wG>0?'<div class="emp-bar bar-green" style="width:'+wG+'px"></div>':'')
+    +(wY>0?'<div class="emp-bar bar-yellow" style="width:'+wY+'px"></div>':'')
+    +(wR>0?'<div class="emp-bar bar-red" style="width:'+wR+'px"></div>':'')
+    +(wGr>0?'<div class="emp-bar bar-gray" style="width:'+wGr+'px"></div>':'')
+    +'</div></td>'
+    +'</tr>';
+}
+
+
+function linkify(text){
+  if(!text) return '';
+  return text.replace(/(https?:\/\/[^\s<]+)/g,'<a href="$1" target="_blank" style="color:var(--accent);word-break:break-all">$1</a>');
+}
+
+
+function filterText(tid,q){ var t=document.getElementById(tid);if(!t)return;q=q.toLowerCase();t.querySelectorAll('tbody tr').forEach(function(r){r.style.display=r.textContent.toLowerCase().includes(q)?'':'none';}); }
+function filterDept(tid,d){ var t=document.getElementById(tid);if(!t)return;t.querySelectorAll('tbody tr').forEach(function(r){r.style.display=(!d||r.dataset.dept===d)?'':'none';}); }
+function filterStatus(tid,s){ var t=document.getElementById(tid);if(!t)return;t.querySelectorAll('tbody tr').forEach(function(r){r.style.display=(!s||r.dataset.status===s)?'':'none';}); }
+function bdgClass(s){ if(!s)return'bdg-d';var l=s.toLowerCase();if(l.includes('complet'))return'bdg-c';if(l.includes('progress')||l.includes('wip'))return'bdg-i';if(l.includes('pend'))return'bdg-p';return'bdg-d'; }
+
+function toggleRemarks(td){
+  td.classList.toggle('expanded');
+  var hint=td.querySelector('.expand-hint');
+  if(hint) hint.style.display = td.classList.contains('expanded') ? 'none' : '';
+}
+function esc(s){ if(!s)return'';return s.toString().replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+function linkify(text){var r=/(https?:\/\/[^\s<>"]+)/g;return text.replace(r,function(u){return '<a href="'+u+'" target="_blank" rel="noopener" style="color:#1B4B35;word-break:break-all;text-decoration:underline">'+u+'<\/a>';});}
+function toast(msg,type){ var el=document.getElementById('toast');el.textContent=msg;el.className='toast show '+(type||'info');clearTimeout(window._tt);window._tt=setTimeout(function(){el.className='toast';},3500); }
+
+function toggleUserMenu(e){
+  e.stopPropagation();
+  var menu=document.getElementById('userMenu');
+  menu.classList.toggle('open');
+}
+document.addEventListener('click',function(){
+  var menu=document.getElementById('userMenu');
+  if(menu) menu.classList.remove('open');
+});
+function doLogout(){
+  currentUser=null;
+  // Reset header
+  var av=document.getElementById('uAvatar');av.textContent='?';av.style.background='#ccc';av.style.color='#888';
+  var nm=document.getElementById('uName');nm.textContent='Not signed in';nm.style.color='var(--text3)';
+  var rl=document.getElementById('uRole');rl.textContent='';rl.style.display='none';
+  // Close menu
+  document.getElementById('userMenu').classList.remove('open');
+  // Clear login fields and error
+  var li=document.getElementById('loginId');if(li)li.value='';
+  var lp=document.getElementById('loginPass');if(lp)lp.value='';
+  var le=document.getElementById('loginErr');if(le)le.style.display='none';
+  // Show login overlay
+  document.getElementById('loginOverlay').style.display='flex';
+  setTimeout(function(){var li=document.getElementById('loginId');if(li)li.focus();},100);
+}
+</script>
+</body>
+</html>
